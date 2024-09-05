@@ -7,6 +7,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
+import os
 
 app = Flask(__name__)
 
@@ -14,14 +15,12 @@ def fill_pdf(template_path, form_data):
     reader = PdfReader(template_path)
     writer = PdfWriter()
 
-    # Copy pages from the template to the writer
-    for page in reader.pages:
-        writer.add_page(page)
+    # Extract and fill form fields
+    form_fields = reader.get_fields()
 
-    # Update form fields
-    for field in writer.get_form_text_fields():
-        if field in form_data:
-            writer.update_page_form_field_values(page, {field: form_data[field]})
+    for page_num, page in enumerate(reader.pages):
+        writer.add_page(page)
+        writer.update_page_form_field_values(writer.pages[page_num], form_data)
 
     # Create a temporary PDF file
     temp_pdf_path = tempfile.mktemp(suffix=".pdf")
@@ -56,14 +55,12 @@ def generate_pdf():
         return send_file(pdf_path, as_attachment=True, download_name='filled_form.pdf')
 
     except Exception as e:
-        # Log the exception for debugging
         app.logger.error(f"An error occurred: {str(e)}")
         return f"An error occurred: {str(e)}"
 
 def send_email_with_attachment(pdf_path, recipient_email):
-    # Email credentials
     sender_email = 'prescricoesineb@gmail.com'
-    sender_password = 'affr ebla htup lznh'
+    sender_password = 'your_email_password'
     subject = 'Aqui está a prescrição!'
     body = 'PDF anexado abaixo.'
 
@@ -88,4 +85,4 @@ def send_email_with_attachment(pdf_path, recipient_email):
         server.sendmail(sender_email, recipient_email, msg.as_string())
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
