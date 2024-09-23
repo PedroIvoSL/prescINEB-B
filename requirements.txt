@@ -3,3 +3,4 @@ flask
 pypdf
 python-docx
 pypandoc
+gunicorn
